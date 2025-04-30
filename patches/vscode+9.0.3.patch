@@ -1,0 +1,13 @@
+diff --git a/node_modules/vscode/vscode/src/vs/editor/common/services/editorWorkerBootstrap.js b/node_modules/vscode/vscode/src/vs/editor/common/services/editorWorkerBootstrap.js
+index 7439f43..266bfd7 100644
+--- a/node_modules/vscode/vscode/src/vs/editor/common/services/editorWorkerBootstrap.js
++++ b/node_modules/vscode/vscode/src/vs/editor/common/services/editorWorkerBootstrap.js
+@@ -9,7 +9,7 @@ function initialize(factory) {
+     initialized = true;
+     const simpleWorker = ( new SimpleWorkerServer((msg) => {
+         globalThis.postMessage(msg);
+-    }, (workerServer) => ( new EditorSimpleWorker(EditorWorkerHost.getChannel(workerServer), null))));
++    }, (workerServer) => ( new EditorSimpleWorker(EditorWorkerHost.getChannel(workerServer), factory))));
+     globalThis.onmessage = (e) => {
+         simpleWorker.onmessage(e.data);
+     };
