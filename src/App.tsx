@@ -31,6 +31,11 @@ const ManyCodingameEditors = lazy(() =>
     default: module.ManyCodingameEditors,
   }))
 );
+const ManyMonaco43Editors = lazy(() =>
+  import("./pages/ManyMonaco43Editors").then((module) => ({
+    default: module.ManyMonaco43Editors,
+  }))
+);
 
 type CurrentView =
   | "BasicCodingameEditor"
@@ -40,7 +45,8 @@ type CurrentView =
   | "CodingameVsMonacoInShadowDomComparison"
   | "SideBySideDiffEditor"
   | "ManyMonacoEditors"
-  | "ManyCodingameEditors";
+  | "ManyCodingameEditors"
+  | "ManyMonaco43Editors";
 
 const CURRENT_VIEW: CurrentView = "ManyMonacoEditors";
 
@@ -70,6 +76,8 @@ const ViewSwitcher = ({ view }: { view: CurrentView }) => {
       return <ManyMonacoEditors />;
     case "ManyCodingameEditors":
       return <ManyCodingameEditors />;
+    case "ManyMonaco43Editors":
+      return <ManyMonaco43Editors />;
     default:
       unreachable(view);
   }

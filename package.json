@@ -19,6 +19,7 @@
     "@codingame/monaco-vscode-standalone-languages": "9.0.3",
     "@codingame/monaco-vscode-standalone-typescript-language-features": "9.0.3",
     "monaco-editor": "0.51",
+    "monaco-editor43": "npm:monaco-editor@0.43",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "vscode": "npm:@codingame/monaco-vscode-api@9.0.3"

@@ -1,9 +1,9 @@
 import "./BasicEditor.css";
-import { MicrosoftMonacoEditor } from "../components/MicrosoftMonacoEditor";
+import { MicrosoftMonaco43Editor } from "../components/MicrosoftMonaco43Editor";
 
 const NUM_EDITORS = 30;
 
-export const ManyMonacoEditors = () => {
+export const ManyMonaco43Editors = () => {
   return (
     <div id="many-editors-root">
       <h1>Multiple Monaco Editors</h1>
@@ -15,7 +15,7 @@ export const ManyMonacoEditors = () => {
         }}
       >
         {Array.from({ length: NUM_EDITORS }).map((_, index) => (
-          <MicrosoftMonacoEditor
+          <MicrosoftMonaco43Editor
             key={index}
             initialValue={`// Editor ${
               index + 1

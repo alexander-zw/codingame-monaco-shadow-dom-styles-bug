@@ -3,7 +3,7 @@ import {
   languages as codingameLanguagesLib,
 } from "@codingame/monaco-vscode-editor-api";
 import { useEffect, useRef } from "react";
-import { EDITOR_OPTIONS, registerCodeActionProvider } from "../utils/utils";
+import { EDITOR_OPTIONS, createEditor } from "../utils/utils";
 import { setupCodingameServices } from "../utils/setupCodingameMonacoConfig";
 
 interface CodingameEditorProps {
@@ -14,8 +14,11 @@ interface CodingameEditorProps {
   measureInit?: number;
 }
 
-let numEditorsLoaded = 0;
-let totalInitTime = 0;
+const measurementRef = {
+  count: 0,
+  totalTime: 0,
+  totalNumber: 0,
+};
 
 export const CodingameEditor = ({
   initialValue,
@@ -26,37 +29,22 @@ export const CodingameEditor = ({
 }: CodingameEditorProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<codingameEditorLib.IStandaloneCodeEditor>(null);
-
   useEffect(() => {
-    const setup = async () => {
-      if (!containerRef.current) {
-        throw new Error("Container not found");
-      }
+    if (measureInit) measurementRef.totalNumber = measureInit;
 
-      await setupCodingameServices();
-
-      const startTime = performance.now();
-
-      editorRef.current = codingameEditorLib.create(containerRef.current, {
+    createEditor({
+      editorLib: codingameEditorLib,
+      languagesLib: codingameLanguagesLib,
+      containerRef,
+      editorRef,
+      options: {
         ...EDITOR_OPTIONS,
         value: initialValue ?? EDITOR_OPTIONS.value,
-      });
-
-      if (provideCodeActions) registerCodeActionProvider(codingameLanguagesLib);
-
-      const endTime = performance.now();
-      numEditorsLoaded++;
-      totalInitTime += endTime - startTime;
-      if (numEditorsLoaded === measureInit) {
-        console.log(`${numEditorsLoaded} editors loaded in ${totalInitTime}ms`);
-      }
-    };
-
-    setup();
-
-    return () => {
-      editorRef.current?.dispose();
-    };
+      },
+      provideCodeActions,
+      measurementRef: measureInit ? measurementRef : undefined,
+      initLib: setupCodingameServices,
+    });
   }, [initialValue, measureInit]);
 
   return (
