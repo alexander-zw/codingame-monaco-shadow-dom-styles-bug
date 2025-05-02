@@ -12,11 +12,13 @@ interface MonacoEditorProps {
   className?: string;
   containerClassName?: string;
   provideCodeActions?: boolean;
+  registerFocusEvents?: boolean;
   measureInit?: number;
 }
 
 const measurementRef = {
-  count: 0,
+  started: 0,
+  finished: 0,
   totalTime: 0,
   totalNumber: 0,
 };
@@ -26,6 +28,7 @@ export const MicrosoftMonacoEditor = ({
   className = "editor-container",
   containerClassName = "h2-and-editor-container",
   provideCodeActions,
+  registerFocusEvents,
   measureInit,
 }: MonacoEditorProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -44,9 +47,11 @@ export const MicrosoftMonacoEditor = ({
         value: initialValue ?? EDITOR_OPTIONS.value,
       },
       provideCodeActions,
+      registerFocusEvents: registerFocusEvents ? "string" : undefined,
       measurementRef: measureInit ? measurementRef : undefined,
+      initLib: async () => {},
     });
-  }, [initialValue]);
+  }, [initialValue, measureInit, provideCodeActions, registerFocusEvents]);
 
   return (
     <div className={containerClassName}>

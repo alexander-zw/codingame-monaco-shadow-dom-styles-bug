@@ -48,7 +48,7 @@ type CurrentView =
   | "ManyCodingameEditors"
   | "ManyMonaco43Editors";
 
-const CURRENT_VIEW: CurrentView = "ManyMonacoEditors";
+const CURRENT_VIEW: CurrentView = "ManyCodingameEditors";
 
 function App() {
   return (

@@ -11,11 +11,13 @@ interface CodingameEditorProps {
   className?: string;
   containerClassName?: string;
   provideCodeActions?: boolean;
+  registerFocusEvents?: boolean;
   measureInit?: number;
 }
 
 const measurementRef = {
-  count: 0,
+  started: 0,
+  finished: 0,
   totalTime: 0,
   totalNumber: 0,
 };
@@ -25,6 +27,7 @@ export const CodingameEditor = ({
   className = "editor-container",
   containerClassName = "h2-and-editor-container",
   provideCodeActions,
+  registerFocusEvents,
   measureInit,
 }: CodingameEditorProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,10 +45,11 @@ export const CodingameEditor = ({
         value: initialValue ?? EDITOR_OPTIONS.value,
       },
       provideCodeActions,
+      registerFocusEvents: registerFocusEvents ? "string" : undefined,
       measurementRef: measureInit ? measurementRef : undefined,
       initLib: setupCodingameServices,
     });
-  }, [initialValue, measureInit]);
+  }, [initialValue, measureInit, provideCodeActions, registerFocusEvents]);
 
   return (
     <div className={containerClassName}>

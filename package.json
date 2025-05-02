@@ -8,11 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postinstall": "patch-package"
+    "profile": "vite build --minify=false --sourcemap && npx serve dist",
+    "postinstall": "patch-package",
+    "reset": "rm -rf .next dist node_modules/.vite"
   },
   "notes": {
-    "@codingame/monaco-vscode-api": "9.0.3",
-    "monaco-editor": "0.51"
+    "@codingame/monaco-vscode-api": "9.0.3 corresponds to monaco-editor 0.51"
   },
   "dependencies": {
     "@codingame/monaco-vscode-editor-api": "9.0.3",

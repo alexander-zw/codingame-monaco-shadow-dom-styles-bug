@@ -1,3 +1,32 @@
+diff --git a/node_modules/vscode/monaco.js b/node_modules/vscode/monaco.js
+index 782fc22..3f7eb1d 100644
+--- a/node_modules/vscode/monaco.js
++++ b/node_modules/vscode/monaco.js
+@@ -70,17 +70,17 @@ function createConfiguredEditorClass(impl) {
+         constructor(domElement, _options = {}, instantiationService, textResourceConfigurationService) {
+             const { theme, autoDetectHighContrast, model, value, language, accessibilityHelpUrl, ariaContainerElement, overflowWidgetsDomNode, dimension, ...options } = _options;
+             const computedOptions = computeConfiguration(textResourceConfigurationService.getValue(_options.model?.uri), options);
+-            super(instantiationService, domElement, { ...computedOptions, overflowWidgetsDomNode, dimension, theme, autoDetectHighContrast, model, value, language, accessibilityHelpUrl, ariaContainerElement });
++            super(instantiationService, domElement, _options);
+             this.textResourceConfigurationService = textResourceConfigurationService;
+             this.optionsOverrides = {};
+             this.lastAppliedEditorOptions = computedOptions;
+             this.optionsOverrides = options;
+-            this._register(textResourceConfigurationService.onDidChangeConfiguration((e) => {
+-                const resource = this.getModel()?.uri;
+-                if (resource != null && e.affectsConfiguration(resource, 'editor')) {
+-                    this.updateEditorConfiguration();
+-                }
+-            }));
++            // this._register(textResourceConfigurationService.onDidChangeConfiguration((e) => {
++            //     const resource = this.getModel()?.uri;
++            //     if (resource != null && e.affectsConfiguration(resource, 'editor')) {
++            //         this.updateEditorConfiguration();
++            //     }
++            // }));
+             this._register(this.onDidChangeModelLanguage(() => this.updateEditorConfiguration()));
+             this._register(this.onDidChangeModel(() => this.updateEditorConfiguration()));
+             this.updateEditorConfiguration();
 diff --git a/node_modules/vscode/vscode/src/vs/editor/common/services/editorWorkerBootstrap.js b/node_modules/vscode/vscode/src/vs/editor/common/services/editorWorkerBootstrap.js
 index 7439f43..266bfd7 100644
 --- a/node_modules/vscode/vscode/src/vs/editor/common/services/editorWorkerBootstrap.js

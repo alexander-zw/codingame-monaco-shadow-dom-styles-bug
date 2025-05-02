@@ -20,36 +20,50 @@ this is an error`,
   theme: "vs-light",
 };
 
-type MonacoLibs = "codingame" | "monaco" | "monaco43";
-
-type LibToArgs = {
-  codingame: {
-    editorLib: typeof codingameEditorLib;
-    languagesLib: typeof codingameLanguagesLib;
-    editorRef: React.RefObject<codingameEditorLib.IStandaloneCodeEditor | null>;
-    options: codingameEditorLib.IStandaloneEditorConstructionOptions;
-  };
-  monaco: {
-    editorLib: typeof monacoEditorLib;
-    languagesLib: typeof monacoLanguagesLib;
-    editorRef: React.RefObject<monacoEditorLib.IStandaloneCodeEditor | null>;
-    options: monacoEditorLib.IStandaloneEditorConstructionOptions;
-  };
-  monaco43: {
-    editorLib: typeof monacoEditorLib43;
-    languagesLib: typeof monacoLanguagesLib43;
-    editorRef: React.RefObject<monacoEditorLib43.IStandaloneCodeEditor | null>;
-    options: monacoEditorLib43.IStandaloneEditorConstructionOptions;
-  };
-};
-
-export const createEditor = async <Lib extends MonacoLibs>({
+const createEditorAndRegister = ({
   editorLib,
   languagesLib,
   containerRef,
   editorRef,
   options,
   provideCodeActions,
+  registerFocusEvents,
+}: Pick<
+  Parameters<typeof createEditor>[0],
+  | "editorLib"
+  | "languagesLib"
+  | "containerRef"
+  | "editorRef"
+  | "options"
+  | "provideCodeActions"
+  | "registerFocusEvents"
+>) => {
+  if (!containerRef.current) {
+    throw new Error("Container not found");
+  }
+
+  editorRef.current = editorLib.create(containerRef.current, options as never);
+
+  if (provideCodeActions) registerCodeActionProvider(languagesLib);
+
+  const dispose = registerFocusEvents
+    ? registerHighlightOnFocus(
+        editorRef.current,
+        registerFocusEvents === "string"
+      )
+    : undefined;
+
+  return () => dispose?.();
+};
+
+export const createEditor = async ({
+  editorLib,
+  languagesLib,
+  containerRef,
+  editorRef,
+  options,
+  provideCodeActions,
+  registerFocusEvents,
   measurementRef,
   initLib,
 }: {
@@ -72,29 +86,39 @@ export const createEditor = async <Lib extends MonacoLibs>({
     monacoEditorLib43.IStandaloneEditorConstructionOptions;
   containerRef: React.RefObject<HTMLDivElement | null>;
   provideCodeActions?: boolean;
-  measurementRef?: { count: number; totalTime: number; totalNumber: number };
-  initLib?: () => Promise<void>;
+  registerFocusEvents?: "string" | "boolean";
+  measurementRef?: {
+    started: number;
+    finished: number;
+    totalTime: number;
+    totalNumber: number;
+  };
+  initLib: () => Promise<void>;
 }) => {
-  if (editorRef.current) return;
-
-  if (!containerRef.current) {
-    throw new Error("Container not found");
-  }
-
   if (initLib) await initLib();
 
+  if (editorRef.current) return;
+
   if (measurementRef) {
-    const editorIndex = measurementRef.count++;
+    if (measurementRef.started === 0) performance.mark("idle-start");
+
+    const editorIndex = measurementRef.started++;
     const editorId = `editor-${editorIndex}`;
     performance.mark(`${editorId}-start`);
 
-    editorRef.current = editorLib.create(containerRef.current, options);
-
-    if (provideCodeActions) registerCodeActionProvider<Lib>(languagesLib);
+    createEditorAndRegister({
+      editorLib,
+      languagesLib,
+      containerRef,
+      editorRef,
+      options,
+      provideCodeActions,
+      registerFocusEvents,
+    });
 
     performance.mark(`${editorId}-end`);
     performance.measure(
-      `Editor ${measurementRef.count} init`,
+      `Editor ${editorIndex} init`,
       `${editorId}-start`,
       `${editorId}-end`
     );
@@ -104,26 +128,45 @@ export const createEditor = async <Lib extends MonacoLibs>({
       .pop();
     if (measure) {
       measurementRef.totalTime += measure.duration;
-      if (editorIndex === measurementRef.totalNumber - 1) {
+      measurementRef.finished++;
+      if (measurementRef.finished === measurementRef.totalNumber) {
         console.log(
-          `${measurementRef.count} editors loaded in ${measurementRef.totalTime}ms`
+          `${measurementRef.finished} editors loaded in ${measurementRef.totalTime}ms`
         );
-        performance.clearMarks();
-        performance.clearMeasures();
+
+        requestIdleCallback(() => {
+          performance.mark("idle-end");
+          performance.measure("Time until idle", "idle-start", "idle-end");
+          const measure = performance.getEntriesByName("Time until idle").pop();
+          console.log(`Time until idle: ${measure?.duration}ms`);
+
+          performance.clearMarks();
+          performance.clearMeasures();
+        });
       }
     }
   } else {
-    editorRef.current = editorLib.create(containerRef.current, options);
-
-    if (provideCodeActions) registerCodeActionProvider<Lib>(languagesLib);
+    createEditorAndRegister({
+      editorLib,
+      languagesLib,
+      containerRef,
+      editorRef,
+      options,
+      provideCodeActions,
+      registerFocusEvents,
+    });
   }
 };
 
-const registerCodeActionProvider = <Lib extends MonacoLibs>(
-  lib: LibToArgs[Lib]["languagesLib"]
+const registerCodeActionProvider = (
+  lib:
+    | typeof codingameLanguagesLib
+    | typeof monacoLanguagesLib
+    | typeof monacoLanguagesLib43
 ) => {
   lib.registerCodeActionProvider("javascript", {
-    provideCodeActions: (model, range, context, token) => {
+    provideCodeActions: (model, range) => {
+      // provideCodeActions: (model, range, context, token) => {
       // console.log("provideCodeActions", model, range, context, token);
       return {
         actions: [
@@ -153,4 +196,30 @@ const registerCodeActionProvider = <Lib extends MonacoLibs>(
       };
     },
   });
+};
+
+export const registerHighlightOnFocus = <IsString extends boolean>(
+  editor: IsString extends true
+    ?
+        | monacoEditorLib.IStandaloneCodeEditor
+        | codingameEditorLib.IStandaloneCodeEditor
+    : monacoEditorLib43.IStandaloneCodeEditor,
+  isString: IsString
+) => {
+  const listeners = [
+    editor.onDidFocusEditorText(() => {
+      editor.updateOptions({
+        occurrencesHighlight: (isString ? "singleFile" : true) as never,
+        selectionHighlight: true,
+      });
+    }),
+    editor.onDidBlurEditorText(() => {
+      editor.updateOptions({
+        occurrencesHighlight: (isString ? "off" : false) as never,
+        selectionHighlight: false,
+      });
+    }),
+  ];
+
+  return () => listeners.forEach((listener) => listener.dispose());
 };
